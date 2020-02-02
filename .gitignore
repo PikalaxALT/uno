@@ -1,0 +1,11 @@
+*.gbc
+*.o
+.idea
+*.map
+*.sym
+*.sav
+*.[12]bpp
+*.lz
+baserom.txt
+uno.txt
+cmake-build-*
