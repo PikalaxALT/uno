@@ -109,6 +109,7 @@ _start::
 	ld hl, wc400
 	ld sp, hl
 	call sub_0243
+sub_0158::
 	di
 	ld hl, wc400
 	ld sp, hl
@@ -348,8 +349,48 @@ sub_02c2::
 
 INCBIN "baserom.gbc",$02e1,$0361-$02e1
 
-sub_0361:: ; $0361
-INCBIN "baserom.gbc",$0361,$03a9-$0361
+sub_0361::
+	ld a, $20
+	ldh [rP1], a
+	ldh a, [rP1]
+	ldh a, [rP1]
+	cpl
+	and $0f
+	swap a
+	ld b, a
+._036f:
+	ld a, $10
+	ldh [rP1], a
+	ldh a, [rP1]
+	ldh a, [rP1]
+	ldh a, [rP1]
+	ldh a, [rP1]
+	ldh a, [rP1]
+	ldh a, [rP1]
+	cpl
+	and $0f
+	or b
+	ld c, a
+	ld a, [$cf49]
+	xor c
+	and c
+	ld [$cf4a], a
+	ld a, c
+	ld [$cf49], a
+	ld a, $30
+	ldh [rP1], a
+	ret
+
+sub_0395::
+	ld a, [$d555]
+	ldh [rBGP], a
+	ld a, [$d556]
+	ldh [rOBP0], a
+	ld a, [$d557]
+	ldh [rOBP1], a
+	xor a
+	ld [$d554], a
+	ret
 
 VBlankInterrupt:: ; $03a9
 INCBIN "baserom.gbc",$03a9,$0431-$03a9
