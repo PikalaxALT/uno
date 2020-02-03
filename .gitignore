@@ -9,3 +9,4 @@
 baserom.txt
 uno.txt
 cmake-build-*
+*.exe

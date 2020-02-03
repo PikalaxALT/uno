@@ -1,3 +1,5 @@
+INCLUDE "constants/hardware_constants.inc"
+
 SECTION "RST00",ROM0[$00]
 _rst00::
 	jp _start ; $0150
@@ -69,51 +71,81 @@ SECTION "Header",ROM0[$100]
 _init::
 	nop
 	jp _start ; $0150
-	ds $150-$104
+SECTION "Cart Header", ROM0 [$104]
+NintendoLogo: ; 104
+	ds $30
+NintendoLogoEnd ; 134
+
+ROMHeader: ; 134
+ROMTitle:
+	ds $0f
+GBCFlags: ; 143
+	ds $1
+GBCLicense: ; 144
+	ds $2
+SGBFlag: ; 146
+	ds $1
+MBCType: ; 147
+	ds $1
+ROMSize: ; 148
+	ds $1
+RAMSize: ; 149
+	ds $1
+DestCode: ; 14a
+	ds $1
+OldLicense: ; 14b
+	ds $1
+VersionNumber:
+	ds $1
+ROMHeaderEnd
+HeaderChecksum:
+	ds $1
+GlobalChecksum:
+	ds $2
 
 SECTION "Start",ROM0[$150]
 _start::
 	di
-	ld hl, $c400
+	ld hl, wc400
 	ld sp, hl
 	call sub_0243
 	di
-	ld hl, $c400
+	ld hl, wc400
 	ld sp, hl
-	call $045c
+	call sub_045c
 	call sub_0228
 	call sub_025c
-	call $139c
-	call $138c
+	call sub_139c
+	call sub_138c
 	ld a, $00
-	ldh [$ff47], a
-	ldh [$ff48], a
-	ldh [$ff49], a
+	ldh [rBGP], a
+	ldh [rOBP0], a
+	ldh [rOBP1], a
 ._0174:
-	call $0361
+	call sub_0361
 	ld a, [$cf49]
 	or a
 	jr nz, ._0174
 ._017d:
-	ldh a, [$ff44]
+	ldh a, [rLY]
 	cp $90
 	jr nc, ._017d
 	ld a, $00
-	ldh [$ff40], a
+	ldh [rLCDC], a
 	ld a, $00
-	ldh [$ff42], a
-	ldh [$ff43], a
+	ldh [rSCY], a
+	ldh [rSCX], a
 	ld a, $40
-	ldh [$ff41], a
+	ldh [rSTAT], a
 	ld a, $50
-	ldh [$ff45], a
+	ldh [rLYC], a
 	ld a, $01
-	ldh [$ffff], a
+	ldh [rIE], a
 	ld a, $2d
-	ldh [$ff47], a
-	ldh [$ff48], a
-	ldh [$ff49], a
-	ld a, [$0143]
+	ldh [rBGP], a
+	ldh [rOBP0], a
+	ldh [rOBP1], a
+	ld a, [GBCFlags]
 	bit 7, a
 	ld a, $01
 	jr z, ._01ac
@@ -123,16 +155,16 @@ _start::
 	ld [$d398], a
 	ld a, [$cf8e]
 	push af
-	ld a, $01
+	ld a, BANK(sub_7f00)
 	di
-	ld [$2000], a
+	ld [MBC5RomBank], a
 	ld [$cf8e], a
 	ei
 	ld a, [$d398]
-	call $7f00
+	call sub_7f00
 	pop af
 	di
-	ld [$2000], a
+	ld [MBC5RomBank], a
 	ld [$cf8e], a
 	ei
 	ld a, $00
@@ -144,16 +176,16 @@ _start::
 	ld e, $93
 ._01dd:
 	ld a, e
-	ldh [$ff40], a
+	ldh [rLCDC], a
 	ld a, $40
-	ldh [$ff45], a
+	ldh [rLYC], a
 	ld a, $44
-	ldh [$ff41], a
+	ldh [rSTAT], a
 	ld a, $03
 	or $08
 	or $04
 	or $10
-	ldh [$ffff], a
+	ldh [rIE], a
 	ld a, $00
 	ld [$cf52], a
 	ld c, $0a
@@ -165,11 +197,11 @@ _start::
 	ld [hli], a
 	dec c
 	jr nz, ._01ff
-	call $02a7
+	call sub_02a7
 	ei
 ._0209:
 	call sub_027c
-	call $3447
+	call sub_3447
 ._020f:
 	ld a, [$cec9]
 	or a
@@ -181,24 +213,24 @@ _start::
 
 sub_021f::
 	ld a, $9c
-	ldh [$ff06], a
-	ld a, $04
-	ldh [$ff07], a
+	ldh [rTMA], a
+	ld a, 1 << rTAC_ON
+	ldh [rTAC], a
 	ret
 
 sub_0228::
 	ld a, [$cf95]
 	or a
 	jr nz, ._0242
-	ld hl, $ff4d
+	ld hl, rKEY1
 	bit 7, [hl]
 	jr nz, ._0242
 	set 0, [hl]
 	xor a
-	ldh [$ff0f], a
-	ldh [$ffff], a
+	ldh [rIF], a
+	ldh [rIE], a
 	ld a, $30
-	ldh [$ff00], a
+	ldh [rJOYP], a
 	stop
 ._0242:
 	ret
@@ -225,7 +257,7 @@ sub_0252::
 
 sub_025c::
 	pop de
-	ld hl, $c400
+	ld hl, wc400
 	ld a, [$cf96]
 	push af
 	ld a, [$cf95]
@@ -246,7 +278,7 @@ sub_025c::
 	ret
 
 sub_027c::
-	call $0361
+	call sub_0361
 	call sub_0283
 	ret
 
@@ -272,27 +304,52 @@ sub_0283::
 	ld [$cf91], a
 	xor a
 	jr ._0292
+sub_02a7::
 	ld a, $80
-	ldh [$ff68], a
+	ldh [rBGPI], a
 	ld b, $40
 	xor a
 	dec a
 ._02af:
-	ldh [$ff69], a
+	ldh [rBGPD], a
 	dec b
 	jr nz, ._02af
 	ld a, $80
-	ldh [$ff6a], a
+	ldh [rOBPI], a
 	ld b, $40
 	xor a
 	dec a
 ._02bc:
-	ldh [$ff6b], a
+	ldh [rOBPD], a
 	dec b
 	jr nz, ._02bc
 	ret
 
-INCBIN "baserom.gbc",$2c2,$03a9-$2c2
+sub_02c2::
+	ld a, $80
+	ldh [rBGPI], a
+	ld hl, $cda0
+	ld b, $40
+._02cb:
+	ld a, [hli]
+	ldh [rBGPD], a
+	dec b
+	jr nz, ._02cb
+	ld a, $80
+	ldh [rOBPI], a
+	ld hl, $cde0
+	ld b, $40
+._02da:
+	ld a, [hli]
+	ldh [rOBPD], a
+	dec b
+	jr nz, ._02da
+	ret
+
+INCBIN "baserom.gbc",$02e1,$0361-$02e1
+
+sub_0361:: ; $0361
+INCBIN "baserom.gbc",$0361,$03a9-$0361
 
 VBlankInterrupt:: ; $03a9
 INCBIN "baserom.gbc",$03a9,$0431-$03a9
@@ -307,4 +364,16 @@ SerialInterrupt:: ; $0436
 INCBIN "baserom.gbc",$0436,$0443-$0436
 
 JoypadInterrupt:: ; $0443
-INCBIN "baserom.gbc",$0443,$4000-$0443
+INCBIN "baserom.gbc",$0443,$045c-$0443
+
+sub_045c::
+INCBIN "baserom.gbc",$045c,$138c-$045c
+
+sub_138c::
+INCBIN "baserom.gbc",$138c,$139c-$138c
+
+sub_139c::
+INCBIN "baserom.gbc",$139c,$3447-$139c
+
+sub_3447::
+INCBIN "baserom.gbc",$3447,$4000-$3447

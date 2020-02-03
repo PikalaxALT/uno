@@ -1,5 +1,13 @@
 SECTION "ROM01",ROMX,BANK[$01]
-INCBIN "baserom.gbc",$4000,$4000
+INCBIN "baserom.gbc",$4000,$44ef-$4000
+
+sub_44ef::
+INCBIN "baserom.gbc",$44ef,$5fcd-$44ef
+
+SECTION "ROM01.7F00",ROMX[$7f00],BANK[$01]
+sub_7f00::
+	jp sub_44ef
+INCBIN "baserom.gbc",$7f03,$7f45-$7f03
 
 SECTION "ROM02",ROMX,BANK[$02]
 INCBIN "baserom.gbc",$8000,$4000
